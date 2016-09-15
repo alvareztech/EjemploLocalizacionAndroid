@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -45,14 +46,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onConnected(@Nullable Bundle bundle) {
 
+        Log.i(Constantes.TAG, "onConnected");
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Location ubicacion = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+            Log.i(Constantes.TAG, " Tenemos permiso");
+
+            obtenerUltimaUbicacion();
 
         } else {
+            Log.i(Constantes.TAG, " No tenemos permiso");
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                Log.i(Constantes.TAG, " Ya preguntamos, no podemos preguntar de nuevo");
 
             } else {
-                ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 9);
+                Log.i(Constantes.TAG, " Nunca solicitamos permiso, lo pedimos ahora");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Constantes.CODIGO_PERMISO_LOCALIZACION);
             }
         }
 
@@ -63,13 +71,29 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == 9) {
+        Log.i(Constantes.TAG, "onRequestPermissionsResult");
+
+        if (requestCode == Constantes.CODIGO_PERMISO_LOCALIZACION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(Constantes.TAG, " El usuario autorizó el permiso");
+
+                obtenerUltimaUbicacion();
 
             } else {
-
+                Log.i(Constantes.TAG, " El ususario denego el permiso");
             }
         }
+    }
+
+    private void obtenerUltimaUbicacion() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        Location ubicacion = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        double latitud =  ubicacion.getLatitude();
+        double longitud =  ubicacion.getLongitude();
+
+
     }
 
     @Override
