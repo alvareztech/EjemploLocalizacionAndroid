@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -18,10 +19,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private GoogleApiClient googleApiClient;
 
+    private TextView longitudTextView;
+    private TextView latitudTextView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        longitudTextView = (TextView) findViewById(R.id.longitudTextView);
+        latitudTextView = (TextView) findViewById(R.id.latitudTextView);
+
 
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -93,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         double latitud =  ubicacion.getLatitude();
         double longitud =  ubicacion.getLongitude();
 
+        latitudTextView.setText(latitud + "");
+        longitudTextView.setText(longitud + "");
 
     }
 
