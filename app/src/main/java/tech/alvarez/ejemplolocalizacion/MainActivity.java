@@ -13,9 +13,11 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private GoogleApiClient googleApiClient;
 
@@ -59,7 +61,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Log.i(Constantes.TAG, " Tenemos permiso");
 
-            obtenerUltimaUbicacion();
+//            obtenerUltimaUbicacion();
+            obtenerActualizacionUbicaciones();
+
 
         } else {
             Log.i(Constantes.TAG, " No tenemos permiso");
@@ -75,6 +79,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
+    private void obtenerActualizacionUbicaciones() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        LocationRequest locationRequest = new LocationRequest()
+                .setInterval(1000) // 1 segundo
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -85,7 +101,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(Constantes.TAG, " El usuario autorizó el permiso");
 
-                obtenerUltimaUbicacion();
+//                obtenerUltimaUbicacion();
+                obtenerActualizacionUbicaciones();
 
             } else {
                 Log.i(Constantes.TAG, " El ususario denego el permiso");
@@ -98,11 +115,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             return;
         }
         Location ubicacion = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        double latitud =  ubicacion.getLatitude();
-        double longitud =  ubicacion.getLongitude();
+        double latitud = ubicacion.getLatitude();
+        double longitud = ubicacion.getLongitude();
 
         latitudTextView.setText(latitud + "");
         longitudTextView.setText(longitud + "");
+
+        Log.i(Constantes.TAG, latitud + "," + longitud);
 
     }
 
@@ -114,5 +133,25 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.i(Constantes.TAG, "onLocationChanged");
+
+        double latitud = location.getLatitude();
+        double longitud = location.getLongitude();
+
+        latitudTextView.setText(latitud + "");
+        longitudTextView.setText(longitud + "");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (googleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        }
     }
 }
